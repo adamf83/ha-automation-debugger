@@ -159,7 +159,7 @@ async def test_duplicate_run_ids_not_recorded(mock_hass):
 
     with patch(
         "custom_components.ha_automation_debugger.coordinator.async_fetch_latest_failure",
-        new=AsyncMock(return_value=dict(_FAILURE)),
+        new=AsyncMock(side_effect=lambda *a, **kw: dict(_FAILURE)),
     ):
         await coordinator._check_for_failure(ENTITY_ID, TRIGGER_TIME)
         await coordinator._check_for_failure(ENTITY_ID, TRIGGER_TIME)

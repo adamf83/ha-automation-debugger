@@ -20,10 +20,20 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import AutomationDebuggerCoordinator
+from . import websocket_api as ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+
+_WS_API_REGISTERED_KEY = f"{DOMAIN}_ws_api_registered"
+
+
+def _register_websocket_api_once(hass: HomeAssistant) -> None:
+    """Register WebSocket commands exactly once, regardless of setup path."""
+    if not hass.data.get(_WS_API_REGISTERED_KEY):
+        ws_api.async_setup(hass)
+        hass.data[_WS_API_REGISTERED_KEY] = True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -46,6 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.info("HA Automation Debugger reloaded")
 
     hass.services.async_register(DOMAIN, "reload", _handle_reload)
+    _register_websocket_api_once(hass)
     _LOGGER.info("HA Automation Debugger set up successfully (YAML)")
     return True
 
@@ -58,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _register_websocket_api_once(hass)
     _LOGGER.info("HA Automation Debugger set up successfully (UI)")
     return True
 
