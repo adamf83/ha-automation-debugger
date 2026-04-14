@@ -1,0 +1,10 @@
+{
+  "domain": "ha_automation_debugger",
+  "name": "HA Automation Debugger",
+  "version": "0.1.0",
+  "documentation": "https://github.com/adamf83/ha-automation-debugger",
+  "dependencies": ["automation"],
+  "requirements": [],
+  "iot_class": "local_push",
+  "codeowners": []
+}
