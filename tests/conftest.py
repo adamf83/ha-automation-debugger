@@ -13,17 +13,50 @@ import pytest
 
 def _stub_ha_modules() -> None:
     """Insert lightweight stub modules into sys.modules."""
+    from datetime import datetime as _dt, timezone as _tz
+
+    # @callback must be a pass-through decorator, not a MagicMock, so that
+    # methods decorated with it retain their real implementations.
+    ha_core_mock = MagicMock()
+    ha_core_mock.callback = lambda f: f
+
+    # parse_datetime must return real datetime objects for comparison tests.
+    dt_util_mock = MagicMock()
+    dt_util_mock.parse_datetime = lambda s: _dt.fromisoformat(s)
+
+    # homeassistant.util mock must expose .dt so that
+    # ``from homeassistant.util import dt`` (attribute access) inside
+    # trace_analyzer.py resolves to the same mock with parse_datetime wired up.
+    ha_util_mock = MagicMock()
+    ha_util_mock.dt = dt_util_mock
+
+    # websocket_api.websocket_command must be a pass-through decorator factory
+    # so that functions decorated with it keep their real implementations.
+    ws_api_mock = MagicMock()
+    ws_api_mock.websocket_command = lambda schema: (lambda f: f)
+    ws_api_mock.async_response = lambda f: f
+
+    # ``from homeassistant.components import websocket_api`` resolves via the
+    # attribute of the components mock, not via sys.modules key lookup, so we
+    # must wire it on the parent mock as well.
+    ha_components_mock = MagicMock()
+    ha_components_mock.websocket_api = ws_api_mock
+
     stubs = {
         "homeassistant": MagicMock(),
-        "homeassistant.core": MagicMock(),
+        "homeassistant.config_entries": MagicMock(),
+        "homeassistant.core": ha_core_mock,
         "homeassistant.const": MagicMock(ATTR_ENTITY_ID="entity_id"),
-        "homeassistant.components": MagicMock(),
+        "homeassistant.components": ha_components_mock,
         "homeassistant.components.sensor": MagicMock(),
         "homeassistant.components.trace": MagicMock(DATA_TRACE="trace"),
+        "homeassistant.components.websocket_api": ws_api_mock,
         "homeassistant.helpers": MagicMock(),
         "homeassistant.helpers.event": MagicMock(),
-        "homeassistant.util": MagicMock(),
-        "homeassistant.util.dt": MagicMock(),
+        "homeassistant.helpers.typing": MagicMock(),
+        "homeassistant.util": ha_util_mock,
+        "homeassistant.util.dt": dt_util_mock,
+        "voluptuous": MagicMock(),
     }
     for name, stub in stubs.items():
         sys.modules.setdefault(name, stub)
