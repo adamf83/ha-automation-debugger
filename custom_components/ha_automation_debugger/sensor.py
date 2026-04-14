@@ -2,10 +2,21 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 from .coordinator import AutomationDebuggerCoordinator
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities,
+) -> None:
+    """Set up the Automation Debugger sensor from a config entry (UI setup)."""
+    coordinator: AutomationDebuggerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([AutomationDebuggerSensor(coordinator)])
 
 
 async def async_setup_platform(
@@ -14,8 +25,8 @@ async def async_setup_platform(
     async_add_entities,
     discovery_info=None,
 ) -> None:
-    """Set up the Automation Debugger sensor from a platform discovery."""
-    coordinator: AutomationDebuggerCoordinator = hass.data[DOMAIN]
+    """Set up the Automation Debugger sensor from a platform discovery (YAML setup)."""
+    coordinator: AutomationDebuggerCoordinator = hass.data[DOMAIN]["yaml"]
     async_add_entities([AutomationDebuggerSensor(coordinator)])
 
 
