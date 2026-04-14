@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Automation Debugger",
+        "description": "Set up HA Automation Debugger to monitor and surface failed automation runs as a sensor. No additional configuration is required."
+      }
+    },
+    "abort": {
+      "already_configured": "HA Automation Debugger is already configured."
+    }
+  }
+}
